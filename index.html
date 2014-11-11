@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Login Proode</title>
+
+	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.3.1/jquery.mobile-1.3.1.min.css" />
+	<link rel="stylesheet" href="css/base.css" />
+	<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+	<script src="js/base.js"></script>
+	<script src="http://code.jquery.com/mobile/1.3.1/jquery.mobile-1.3.1.min.js"></script>
+</head>
+
+<body>
+
+<div data-role="page" id="inicio">
+	<div data-role="header">
+		<h1>Login Proode</h1>
+	</div>
+	<div class="Container">
+		<div data-role="content">
+			<div class="mensaje"></div>
+			<form id="formulario" >
+				<label> Usuario </label>
+				<input type="text" id="email" name="email">
+				<label> Password </label>
+				<input type="password" id="pass" name="pass" >
+
+				<input type="submit" value="Login" id="botonLogin">
+			</form>
+		</div>
+	</div>
+	<a href="#" id="showMapPage">VER POSICIÓN EN EL MAPA</a>
+</div>
+<div data-role="page" id="home">
+		<div data-role="header">
+			<h1>Bienvenido</h1>
+		</div>
+	<div class="Container">
+		<div data-role="content">
+			<h2> Bienvenido <span class="fullName"></span> </h2>
+			<h3> ¡¡ Aguante <span class="team"></span> !!</h3>
+		</div>
+	</div>
+</div>
+
+<div data-role="page" id="mapPage">
+	<div data-role="header">
+		<h1>LOCALIZACIÓN</h1>
+	</div>
+	<div class="Container">
+		<img id="map" alt="Location Map" />
+		<a href="#" class="getPosition">Obtener posición actual</a>
+	</div>
+</div>
+
+<script>
+	$('#showMapPage').on('click',function(){
+		$.mobile.changePage("#mapPage");
+	})
+	$('.getPosition').on('click',function(){
+		getLocation();
+	})
+	$('#formulario').submit(function() {
+// recolecta los valores que inserto el usuario
+		var userMail = $("#email").val()
+		var userPw = $("#pass").val()
+		var token = '9ads9asd945dasqwec';
+		var $file = "http://www.proode.com.ar/ws/login.php?token="+token+"&mail="+userMail+"&pass="+userPw;
+		if (!userMail || !userPw) {
+			$('.mensaje').text('Error: Complete los campos')
+				.fadeIn(1000).delay(1000).fadeOut(1000);
+			$('input[type=submit]').parent().attr('class','ui-submit ui-btn ui-btn-up-c ui-shadow ui-btn-corner-all')
+		}else{
+			$.getJSON($file, function(data){
+				var status = data.status
+				if(status == 'error'){
+					$('.mensaje').text('Error: verifique sus datos')
+						.fadeIn(1000).delay(1000).fadeOut(1000);
+					$('input[type=submit]').parent().attr('class','ui-submit ui-btn ui-btn-up-c ui-shadow ui-btn-corner-all')
+				}
+				if(status == 'success'){
+					$('h2 .fullName').text(data.data.name+' '+data.data.lastname)
+					$('h3 span.team').text(data.data.team);
+					$.mobile.changePage("#home");
+				}
+			})
+		}
+		return false
+	})
+
+	/*
+	 * This file contains script to get lattitude and longitude
+	 *
+	 */
+	var lat = 0;
+	var lng = 0;
+	//A button click will call this function
+	function getLocation() {
+		navigator.geolocation.getCurrentPosition(onSuccess, onError, { maximumAge: 0, timeout: 1000, enableHighAccuracy: true });
+	}
+
+	// onSuccess Geolocation
+	//
+	function onSuccess(position) {
+		//Lat long will be fetched and stored in session variables
+		//These variables will be used while storing data in local database
+		lat = position.coords.latitude;
+		lng = position.coords.longitude;
+		var map = $('img#map')
+		//alert('Lattitude: ' + lat + ' Longitude: ' + lng);
+		sessionStorage.setItem('lattitude', lat);
+		sessionStorage.setItem('longitude', lng);
+
+		//map.attr('src','http://www.adictosaltrabajo.com/imagenes/prohibidos-monos-lagartos-300x300.gif')
+		map.attr('src',"http://maps.googleapis.com/maps/api/staticmap?center=" +
+			lat + "," + lng + "&zoom=14&size=" + 320 + "x" + 400 + "&maptype=roadmap&markers=color:green%7C" +
+			lat + "," + lng + "&sensor=false");
+
+	}
+	// onError Callback receives a PositionError object
+	//
+	function onError(error) {
+		alert('code: ' + error.code + '\n' +
+		'message: ' + error.message + '\n');
+	}
+</script>
+
+</body>
+</html>
